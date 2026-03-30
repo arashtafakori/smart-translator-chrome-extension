@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Quick Google Translator",
+  "version": "1.0",
+  "description": "Translate selected text using Google Translate in a popup dialog.",
+  "permissions": [
+    "activeTab"
+  ],
+  "action": {
+    "default_title": "Quick Google Translator"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ]
+}

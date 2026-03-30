@@ -1,0 +1,93 @@
+/* Styles for the floating translation button */
+.gt-floating-button {
+    position: absolute;
+    z-index: 10000;
+    width: 32px;
+    height: 32px;
+    background-color: #4285f4;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    padding: 0;
+    transition: transform 0.2s;
+}
+
+.gt-floating-button:hover {
+    transform: scale(1.1);
+    background-color: #357ae8;
+}
+
+.gt-floating-button img {
+    width: 20px;
+    height: 20px;
+}
+
+/* Styles for the translation dialog */
+.gt-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gt-dialog {
+    width: 600px;
+    height: 450px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.gt-dialog-header {
+    padding: 10px 15px;
+    background: #f1f3f4;
+    border-bottom: 1px solid #dadce0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gt-dialog-title {
+    font-weight: 500;
+    color: #3c4043;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.gt-close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #5f6368;
+    line-height: 1;
+}
+
+.gt-close-button:hover {
+    color: #202124;
+}
+
+.gt-iframe-container {
+    flex-grow: 1;
+    width: 100%;
+    height: 100%;
+}
+
+.gt-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
