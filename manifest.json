@@ -4,10 +4,19 @@
   "version": "1.0",
   "description": "Translate selected text using Google Translate in a popup dialog.",
   "permissions": [
-    "activeTab"
+    "activeTab",
+    "storage"
   ],
+  "options_page": "options.html",
   "action": {
     "default_title": "Quick Google Translator"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "background": {
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {

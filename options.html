@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Settings</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+            width: 300px;
+        }
+        h2 {
+            margin-top: 0;
+            font-size: 1.2rem;
+        }
+        .setting-item {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .status {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #4CAF50;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h2>Translator Settings</h2>
+    <div class="setting-item">
+        <label for="popup-behavior">Popup Behavior:</label>
+        <select id="popup-behavior">
+            <option value="reuse">Reuse existing window</option>
+            <option value="new">Always open new window</option>
+        </select>
+    </div>
+    <div id="status" class="status">Settings saved!</div>
+    <script src="options.js"></script>
+</body>
+</html>

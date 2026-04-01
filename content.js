@@ -80,5 +80,9 @@ function removeFloatingButton() {
 function openTranslateDialog(text) {
     const encodedText = encodeURIComponent(text);
     const translateUrl = `https://translate.google.com/?sl=auto&tl=en&text=${encodedText}&op=translate`;
-    window.open(translateUrl, 'GoogleTranslate', 'width=800,height=600,top=100,left=100');
+
+    chrome.runtime.sendMessage({
+        action: 'openTranslate',
+        url: translateUrl
+    });
 }
