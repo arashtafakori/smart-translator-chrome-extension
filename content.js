@@ -4,6 +4,12 @@ let languages = null;
 let sourceLang = 'auto';
 let targetLang = 'en';
 
+const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur', 'ps', 'sd', 'yi', 'ug', 'ckb'];
+
+function isRTL(langCode) {
+    return RTL_LANGUAGES.includes(langCode);
+}
+
 async function loadLanguages() {
     if (languages) return languages;
     try {
@@ -113,22 +119,20 @@ async function translateText(text, sl, tl) {
         const response = await fetch(url);
         const data = await response.json();
         const translatedText = data[0].map(item => item[0]).join('');
-        showTranslationPopup(text, translatedText, sl, tl);
+        const detectedSrcLang = data[2] || sl;
+        showTranslationPopup(text, translatedText, sl, tl, detectedSrcLang);
     } catch (error) {
         console.error('Translation error:', error);
     }
 }
 
-function showTranslationPopup(originalText, translatedText, currentSl, currentTl) {
+function showTranslationPopup(originalText, translatedText, currentSl, currentTl, detectedSrcLang) {
     // Remove any existing dialog
     const existingDialog = document.querySelector('.gt-dialog-overlay');
     if (existingDialog) existingDialog.remove();
 
     const overlay = document.createElement('div');
     overlay.className = 'gt-dialog-overlay';
-
-    let slOptions = '';
-    let tlOptions = '';
 
     overlay.innerHTML = `
         <div class="gt-dialog">
@@ -169,6 +173,10 @@ function showTranslationPopup(originalText, translatedText, currentSl, currentTl
     setupSearchableDropdown(overlay, 'tl', originalText, false);
 
     document.body.appendChild(overlay);
+
+    // Initial direction adjustment
+    updateTextDirection('original', currentSl === 'auto' ? detectedSrcLang : currentSl);
+    updateTextDirection('translated', currentTl);
 }
 
 function setupSearchableDropdown(overlay, type, originalText, includeAuto) {
@@ -194,8 +202,13 @@ function setupSearchableDropdown(overlay, type, originalText, includeAuto) {
             item.onclick = (e) => {
                 e.stopPropagation();
                 searchInput.value = name;
-                if (type === 'sl') sourceLang = code;
-                else targetLang = code;
+                if (type === 'sl') {
+                    sourceLang = code;
+                    updateTextDirection('original', code);
+                } else {
+                    targetLang = code;
+                    updateTextDirection('translated', code);
+                }
                 optionsList.style.display = 'none';
                 translateText(originalText, sourceLang, targetLang);
                 updateOptions(); // Refresh selected state
@@ -203,6 +216,9 @@ function setupSearchableDropdown(overlay, type, originalText, includeAuto) {
             optionsList.appendChild(item);
         });
     };
+
+    // Set initial direction
+    updateTextDirection(type === 'sl' ? 'original' : 'translated', currentLang);
 
     searchInput.onfocus = () => {
         optionsList.style.display = 'block';
@@ -227,4 +243,13 @@ function setupSearchableDropdown(overlay, type, originalText, includeAuto) {
             }
         }
     });
+}
+
+function updateTextDirection(type, langCode) {
+    const container = document.getElementById(`gt-${type}-text`);
+    if (container) {
+        const direction = isRTL(langCode) ? 'rtl' : 'ltr';
+        container.style.direction = direction;
+        container.style.textAlign = direction === 'rtl' ? 'right' : 'left';
+    }
 }
