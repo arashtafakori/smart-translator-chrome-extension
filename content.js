@@ -9,6 +9,15 @@ async function loadLanguages() {
     try {
         const response = await fetch(chrome.runtime.getURL('languages.json'));
         languages = await response.json();
+
+        // Load saved defaults from storage
+        const items = await chrome.storage.sync.get({
+            sourceLang: 'auto',
+            targetLang: 'en'
+        });
+        sourceLang = items.sourceLang;
+        targetLang = items.targetLang;
+
         return languages;
     } catch (error) {
         console.error('Error loading languages:', error);
