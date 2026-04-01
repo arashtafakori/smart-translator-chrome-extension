@@ -7,6 +7,15 @@
     "activeTab",
     "storage"
   ],
+  "host_permissions": [
+    "https://translate.googleapis.com/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["languages.json"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "options_page": "options.html",
   "action": {
     "default_title": "Quick Google Translator"

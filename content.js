@@ -1,5 +1,20 @@
 let floatingButton = null;
 let currentSelection = "";
+let languages = null;
+let sourceLang = 'auto';
+let targetLang = 'en';
+
+async function loadLanguages() {
+    if (languages) return languages;
+    try {
+        const response = await fetch(chrome.runtime.getURL('languages.json'));
+        languages = await response.json();
+        return languages;
+    } catch (error) {
+        console.error('Error loading languages:', error);
+        return { "auto": "Detected Language", "en": "English" };
+    }
+}
 
 document.addEventListener('mouseup', handleMouseUp);
 document.addEventListener('mousedown', handleMouseDown);
@@ -77,12 +92,82 @@ function removeFloatingButton() {
     }
 }
 
-function openTranslateDialog(text) {
-    const encodedText = encodeURIComponent(text);
-    const translateUrl = `https://translate.google.com/?sl=auto&tl=en&text=${encodedText}&op=translate`;
+async function openTranslateDialog(text) {
+    await loadLanguages();
+    translateText(text, sourceLang, targetLang);
+}
 
-    chrome.runtime.sendMessage({
-        action: 'openTranslate',
-        url: translateUrl
-    });
+async function translateText(text, sl, tl) {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        const translatedText = data[0].map(item => item[0]).join('');
+        showTranslationPopup(text, translatedText, sl, tl);
+    } catch (error) {
+        console.error('Translation error:', error);
+    }
+}
+
+function showTranslationPopup(originalText, translatedText, currentSl, currentTl) {
+    // Remove any existing dialog
+    const existingDialog = document.querySelector('.gt-dialog-overlay');
+    if (existingDialog) existingDialog.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'gt-dialog-overlay';
+
+    let slOptions = '';
+    let tlOptions = '';
+
+    for (const [code, name] of Object.entries(languages)) {
+        slOptions += `<option value="${code}" ${code === currentSl ? 'selected' : ''}>${name}</option>`;
+        if (code !== 'auto') {
+            tlOptions += `<option value="${code}" ${code === currentTl ? 'selected' : ''}>${name}</option>`;
+        }
+    }
+
+    overlay.innerHTML = `
+        <div class="gt-dialog">
+            <div class="gt-dialog-header">
+                <span class="gt-dialog-title">Translation</span>
+                <button class="gt-close-button">&times;</button>
+            </div>
+            <div class="gt-language-selectors">
+                <select class="gt-lang-select" id="gt-sl">${slOptions}</select>
+                <span class="gt-lang-arrow">→</span>
+                <select class="gt-lang-select" id="gt-tl">${tlOptions}</select>
+            </div>
+            <div class="gt-translation-content">
+                <div class="gt-section">
+                    <div class="gt-section-label">Original</div>
+                    <div class="gt-text-container" id="gt-original-text">${originalText}</div>
+                </div>
+                <div class="gt-section">
+                    <div class="gt-section-label">Translated</div>
+                    <div class="gt-text-container" id="gt-translated-text">${translatedText}</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    overlay.querySelector('.gt-close-button').onclick = () => overlay.remove();
+    overlay.onclick = (e) => {
+        if (e.target === overlay) overlay.remove();
+    };
+
+    const slSelect = overlay.querySelector('#gt-sl');
+    const tlSelect = overlay.querySelector('#gt-tl');
+
+    const handleLangChange = () => {
+        sourceLang = slSelect.value;
+        targetLang = tlSelect.value;
+        translateText(originalText, sourceLang, targetLang);
+    };
+
+    slSelect.onchange = handleLangChange;
+    tlSelect.onchange = handleLangChange;
+
+    document.body.appendChild(overlay);
 }

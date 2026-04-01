@@ -67,6 +67,35 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.gt-language-selectors {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #dadce0;
+}
+
+.gt-lang-select {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #dadce0;
+    font-size: 13px;
+    color: #3c4043;
+    background: white;
+    cursor: pointer;
+}
+
+.gt-lang-select:focus {
+    outline: none;
+    border-color: #4285f4;
+}
+
+.gt-lang-arrow {
+    color: #5f6368;
+    font-size: 14px;
+}
+
 .gt-close-button {
     background: none;
     border: none;
@@ -84,6 +113,39 @@
     flex-grow: 1;
     width: 100%;
     height: 100%;
+}
+
+.gt-translation-content {
+    padding: 15px;
+    overflow-y: auto;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.gt-section {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.gt-section-label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #5f6368;
+    text-transform: uppercase;
+}
+
+.gt-text-container {
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dadce0;
+    color: #202124;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
 }
 
 .gt-iframe {
