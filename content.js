@@ -130,13 +130,6 @@ function showTranslationPopup(originalText, translatedText, currentSl, currentTl
     let slOptions = '';
     let tlOptions = '';
 
-    for (const [code, name] of Object.entries(languages)) {
-        slOptions += `<option value="${code}" ${code === currentSl ? 'selected' : ''}>${name}</option>`;
-        if (code !== 'auto') {
-            tlOptions += `<option value="${code}" ${code === currentTl ? 'selected' : ''}>${name}</option>`;
-        }
-    }
-
     overlay.innerHTML = `
         <div class="gt-dialog">
             <div class="gt-dialog-header">
@@ -144,9 +137,15 @@ function showTranslationPopup(originalText, translatedText, currentSl, currentTl
                 <button class="gt-close-button">&times;</button>
             </div>
             <div class="gt-language-selectors">
-                <select class="gt-lang-select" id="gt-sl">${slOptions}</select>
+                <div class="gt-searchable-select" id="gt-sl-container">
+                    <input type="text" class="gt-search-input" id="gt-sl-search" placeholder="Source...">
+                    <div class="gt-options-list" id="gt-sl-options"></div>
+                </div>
                 <span class="gt-lang-arrow">→</span>
-                <select class="gt-lang-select" id="gt-tl">${tlOptions}</select>
+                <div class="gt-searchable-select" id="gt-tl-container">
+                    <input type="text" class="gt-search-input" id="gt-tl-search" placeholder="Target...">
+                    <div class="gt-options-list" id="gt-tl-options"></div>
+                </div>
             </div>
             <div class="gt-translation-content">
                 <div class="gt-section">
@@ -166,17 +165,66 @@ function showTranslationPopup(originalText, translatedText, currentSl, currentTl
         if (e.target === overlay) overlay.remove();
     };
 
-    const slSelect = overlay.querySelector('#gt-sl');
-    const tlSelect = overlay.querySelector('#gt-tl');
-
-    const handleLangChange = () => {
-        sourceLang = slSelect.value;
-        targetLang = tlSelect.value;
-        translateText(originalText, sourceLang, targetLang);
-    };
-
-    slSelect.onchange = handleLangChange;
-    tlSelect.onchange = handleLangChange;
+    setupSearchableDropdown(overlay, 'sl', originalText, true);
+    setupSearchableDropdown(overlay, 'tl', originalText, false);
 
     document.body.appendChild(overlay);
+}
+
+function setupSearchableDropdown(overlay, type, originalText, includeAuto) {
+    const searchInput = overlay.querySelector(`#gt-${type}-search`);
+    const optionsList = overlay.querySelector(`#gt-${type}-options`);
+    const currentLang = type === 'sl' ? sourceLang : targetLang;
+
+    // Set initial value
+    searchInput.value = languages[currentLang] || '';
+
+    const updateOptions = (filter = '') => {
+        optionsList.innerHTML = '';
+        const lowerFilter = filter.toLowerCase();
+        const filtered = Object.entries(languages).filter(([code, name]) => {
+            if (!includeAuto && code === 'auto') return false;
+            return name.toLowerCase().includes(lowerFilter);
+        });
+
+        filtered.forEach(([code, name]) => {
+            const item = document.createElement('div');
+            item.className = 'gt-option-item' + (code === (type === 'sl' ? sourceLang : targetLang) ? ' selected' : '');
+            item.textContent = name;
+            item.onclick = (e) => {
+                e.stopPropagation();
+                searchInput.value = name;
+                if (type === 'sl') sourceLang = code;
+                else targetLang = code;
+                optionsList.style.display = 'none';
+                translateText(originalText, sourceLang, targetLang);
+                updateOptions(); // Refresh selected state
+            };
+            optionsList.appendChild(item);
+        });
+    };
+
+    searchInput.onfocus = () => {
+        optionsList.style.display = 'block';
+        updateOptions('');
+    };
+
+    searchInput.oninput = () => {
+        updateOptions(searchInput.value);
+    };
+
+    searchInput.onclick = (e) => e.stopPropagation();
+
+    document.addEventListener('click', function closeDropdown(e) {
+        if (!overlay.contains(e.target) || !e.target.closest(`#gt-${type}-container`)) {
+            optionsList.style.display = 'none';
+            const currentName = languages[type === 'sl' ? sourceLang : targetLang];
+            if (searchInput.value !== currentName) {
+                searchInput.value = currentName;
+            }
+            if (!overlay.isConnected) {
+                document.removeEventListener('click', closeDropdown);
+            }
+        }
+    });
 }

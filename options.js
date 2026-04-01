@@ -1,49 +1,88 @@
+let languages = {};
+let currentSourceLang = 'auto';
+let currentTargetLang = 'en';
+
 // Load languages and settings
 async function initOptions() {
     try {
         const response = await fetch(chrome.runtime.getURL('languages.json'));
-        const languages = await response.json();
+        languages = await response.json();
         
-        const sourceSelect = document.getElementById('default-source-lang');
-        const targetSelect = document.getElementById('default-target-lang');
-
-        // Populate dropdowns
-        for (const [code, name] of Object.entries(languages)) {
-            const sourceOption = new Option(name, code);
-            sourceSelect.add(sourceOption);
-
-            if (code !== 'auto') {
-                const targetOption = new Option(name, code);
-                targetSelect.add(targetOption);
-            }
-        }
-
         // Restore saved settings
-        chrome.storage.sync.get({
+        const items = await chrome.storage.sync.get({
             sourceLang: 'auto',
             targetLang: 'en'
-        }, (items) => {
-            sourceSelect.value = items.sourceLang;
-            targetSelect.value = items.targetLang;
         });
+        
+        currentSourceLang = items.sourceLang;
+        currentTargetLang = items.targetLang;
 
-        // Add event listeners
-        sourceSelect.addEventListener('change', saveOptions);
-        targetSelect.addEventListener('change', saveOptions);
+        setupSearchableDropdown('source', true);
+        setupSearchableDropdown('target', false);
 
     } catch (error) {
         console.error('Error initializing options:', error);
     }
 }
 
+function setupSearchableDropdown(type, includeAuto) {
+    const searchInput = document.getElementById(`${type}-search`);
+    const optionsList = document.getElementById(`${type}-options`);
+    const currentLang = type === 'source' ? currentSourceLang : currentTargetLang;
+
+    // Set initial value
+    searchInput.value = languages[currentLang] || '';
+
+    const updateOptions = (filter = '') => {
+        optionsList.innerHTML = '';
+        const lowerFilter = filter.toLowerCase();
+        const filtered = Object.entries(languages).filter(([code, name]) => {
+            if (!includeAuto && code === 'auto') return false;
+            return name.toLowerCase().includes(lowerFilter);
+        });
+
+        filtered.forEach(([code, name]) => {
+            const item = document.createElement('div');
+            item.className = 'gt-option-item' + (code === (type === 'source' ? currentSourceLang : currentTargetLang) ? ' selected' : '');
+            item.textContent = name;
+            item.onclick = () => {
+                searchInput.value = name;
+                if (type === 'source') currentSourceLang = code;
+                else currentTargetLang = code;
+                optionsList.style.display = 'none';
+                saveOptions();
+                updateOptions(); // Refresh selected state
+            };
+            optionsList.appendChild(item);
+        });
+    };
+
+    searchInput.onfocus = () => {
+        optionsList.style.display = 'block';
+        updateOptions(searchInput.value === languages[type === 'source' ? currentSourceLang : currentTargetLang] ? '' : searchInput.value);
+    };
+
+    searchInput.oninput = () => {
+        updateOptions(searchInput.value);
+    };
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest(`#${type}-lang-container`)) {
+            optionsList.style.display = 'none';
+            // Reset to current selection if input is empty or invalid
+            const currentName = languages[type === 'source' ? currentSourceLang : currentTargetLang];
+            if (searchInput.value !== currentName) {
+                searchInput.value = currentName;
+            }
+        }
+    });
+}
+
 // Save settings to chrome.storage
 function saveOptions() {
-    const sourceLang = document.getElementById('default-source-lang').value;
-    const targetLang = document.getElementById('default-target-lang').value;
-
     chrome.storage.sync.set({
-        sourceLang: sourceLang,
-        targetLang: targetLang
+        sourceLang: currentSourceLang,
+        targetLang: currentTargetLang
     }, () => {
         const status = document.getElementById('status');
         status.style.display = 'block';
